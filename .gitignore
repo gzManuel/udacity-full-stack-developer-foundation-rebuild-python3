@@ -1,3 +1,4 @@
 # Ignoring myenv virtual python configuration.
 myenv/
 .vscode
+*.db
