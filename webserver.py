@@ -1,5 +1,8 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import cgi
+import cgi, cgitb
+import sys
+cgitb.enable()
+
 class WebServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         
@@ -21,22 +24,34 @@ class WebServerHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             self.send_response(301)
-            self.send_header('Content-type', 'text/html')
+            self.send_header('content-type', 'text/html')
             self.end_headers()
-            # ctype, pdifct = cgi.parse_header(self.headers.keys['content-type'])
-            # if ctype == "multipart/form-data":
-            #     fields = cgi.parse_multipart(self.rfile,pdifct)
-            #     messageContent = fields.get('message')
+
+            ctype, pdict = cgi.parse_header(self.headers['content-type'])
+            pdict['boundary'] = bytes(pdict['boundary'], "utf-8")
+            content_len =int(self.headers.get('Content-length'))
+            pdict['CONTENT-LENGTH'] = content_len
+            if ctype == 'multipart/form-data':
+                fields = cgi.parse_multipart(self.rfile, pdict)
+
+            message = fields.get("message")[0]
+            message = str(message).lower()
+            if message == "no body loves you":
+                message = "God's love's me"
             output = ""
-            output += "<html><body>sdfsdfsd"
-            # output += " <h2> Okay, how about this: </h2>"
-            # output += "<h1> {} </h1>".format(messageContent[0])
-            # output += '''<form method='POST' enctype='multipart/form-data' action='/hello'><h2>What would you like me to say?</h2><input name="message" type="text" ><input type="submit" value="Submit"> </form>'''
-            
+            output += "<html><body>"
+            output += " <h2> Okay, how about this: </h2>"
+            output += "<h1> "+message+"</h2>"
+            output += '''<form method='POST' enctype='multipart/form-data' action='/hello'><h2>What would you like me to say?</h2><input name="message" type="text" ><input type="submit" value="Submit"> </form>'''
             output += "</body></html>"
+
+            
+
             self.wfile.write(output.encode('utf-8'))
             print(output)
         except:
+            self.send_error(404, "{}".format(sys.exc_info()[0]))
+            print(sys.exc_info()    )
             pass
 
 def main():
