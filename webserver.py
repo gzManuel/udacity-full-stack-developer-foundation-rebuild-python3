@@ -1,7 +1,17 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from database import Base, Restaurant, MenuItem, Address, Employee
 import cgi, cgitb
 import sys
+
 cgitb.enable()
+engine = create_engine('sqlite:///restaurantmenu.db')
+
+Base.metadata.create_all(engine)
+DBSession = sessionmaker(bind = engine)
+session = DBSession()
+
 
 class WebServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -10,6 +20,7 @@ class WebServerHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type','text/html')
             self.end_headers()
+
             output = ""
             output += "<html><body>"
             output += "<h1>Hello!</h1>"
@@ -18,8 +29,12 @@ class WebServerHandler(BaseHTTPRequestHandler):
 
             self.wfile.write( output.encode('utf-8'))#We need to encode our message before send
             print(output)
-        
+        elif self.path.endswith("/restaurants"):
+            
+            pass
+
         else:
+        
             self.send_error(404,'File Not Found: '+self.path)
     def do_POST(self):
         try:
@@ -38,15 +53,13 @@ class WebServerHandler(BaseHTTPRequestHandler):
             message = str(message).lower()
             if message == "no body loves you":
                 message = "God's love's me"
+
             output = ""
             output += "<html><body>"
             output += " <h2> Okay, how about this: </h2>"
             output += "<h1> "+message+"</h2>"
             output += '''<form method='POST' enctype='multipart/form-data' action='/hello'><h2>What would you like me to say?</h2><input name="message" type="text" ><input type="submit" value="Submit"> </form>'''
             output += "</body></html>"
-
-            
-
             self.wfile.write(output.encode('utf-8'))
             print(output)
         except:

@@ -2,3 +2,4 @@
 myenv/
 .vscode
 *.db
+__pycache__
